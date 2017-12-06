@@ -1,5 +1,6 @@
 -- select * from pd_query where query_id = 'F003(фд)/Лицензии медицинских организаций действующие на заданную дату'
--- oracle
+-- как я понял, один входящий параметр ДАТА!
+--  oracle
            SELECT  DISTINCT
                   OMS.DT_MEDLIC .RECORD_UQ 
                 
