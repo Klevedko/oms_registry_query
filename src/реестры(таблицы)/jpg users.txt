@@ -1,0 +1,40 @@
+table user_role
+-- роли для ЧИТ
+insert into user_role(user_id,role_id)
+select id,
+(select id from role where code='xfoms_user')
+from "user" 
+where username in ('omsgavr','omsitsvet','omsmaks','OMSUSAC','PAVELKO')
+;
+
+-- роли для +
+insert into user_role(user_id,role_id)
+select id,
+(select id from role where code='ffoms_user')
+from "user" 
+where username in ('OMSCONS','OMSGAMT','OMSLOGO','OMSMAJOR','OMSKOVAL')
+;
+
+-- роли для -
+insert into user_role(user_id,role_id)
+select id,
+(select id from role where code='ffoms_user')
+from "user" 
+where username in ('DANILINA','ZOLOTAR','omsbakl','omssaks','OMSSANA','omssmirn','omstishs','omszlokaz')
+;
+
+-- роли для TF NOT EXP ( каждому даёт МО и СМО )
+insert into user_role(user_id,role_id)
+select x.id,s.id
+from "user" x
+join  lateral ( select id from role where code in ('tfoms_user_smo_create','tfoms_user_mo_create','tfoms_user_smo_edit','tfoms_user_mo_edit')) as s on true
+where username like 'TF%' and username not like '%EXP'
+;
+
+-- роли для TF  EXP ( каждому даёт роль ЭКСПЕРТ
+insert into user_role(user_id,role_id)
+select  x.id,
+(select id from role where code ='tfoms_user_exmp')
+from "user" x
+where username like 'TF%' and username like '%EXP'
+;

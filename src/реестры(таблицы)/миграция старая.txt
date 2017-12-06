@@ -1,0 +1,1824 @@
+select truncate_tables('d')
+/*
+CREATE EXTENSION dblink;
+select dblink_connect('dbname=test');
+
+--отбор пользователей.
+select truncate_tables('dsd')
+select  D.USER_ID,p.user_email, p.user_phone, account_status, p.user_id ,user_name
+from dba_users d 
+RIGHT join prodd.pd_user p on lower(d.username) = lower(p.user_id)
+
+этот файл заливаем во временную таблицу
+и вставка в sec.user
+insert into sec.user(id,email,        phone,        is_enabled        ,user_name        , user_login        )
+select nextval('sec.user_id_seq'),"USER_EMAIL","USER_PHONE",        case when "ACCOUNT_STATUS"  = 'OPEN' then true else false end ,        "USER_NAME",        "USER_ID_1"
+from sec.ttt
+*/
+
+/*
+-- функция очистки всех таблиц
+CREATE OR REPLACE FUNCTION "oms"."truncate_tables"("username" varchar)
+  RETURNS "pg_catalog"."void" AS $BODY$
+DECLARE
+    statements CURSOR FOR
+                        SELECT table_name FROM information_schema.tables 
+                        where table_catalog=(select current_database())
+                        and table_schema = (select current_schema);
+BEGIN
+    FOR stmt IN statements LOOP
+        EXECUTE 'TRUNCATE TABLE ' || quote_ident(stmt.table_name) || ' CASCADE;';
+    END LOOP;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+
+;
+
+-- функция создания столбца record_in_old
+CREATE OR REPLACE FUNCTION "oms"."full_tables_record_in_old"("username" varchar)
+  RETURNS "pg_catalog"."void" AS $BODY$
+DECLARE
+    statements CURSOR FOR
+                        SELECT table_name FROM information_schema.tables 
+                        where table_catalog=(select current_database())
+                        and table_schema = (select current_schema) 
+                        and table_name <> 'ca_scandoc' 
+                        and table_name <> 'dt_expinc' 
+                        and table_name <> 'dt_explic' 
+                        and table_name <> 'dt_expoff' 
+                        and table_name <> 'dt_exprex' 
+                        and table_name <> 'dt_insinc'
+                        and table_name <> 'dt_inslic'
+                        and table_name <> 'dt_insrex'
+                        and table_name <> 'dt_inssig'
+                        and table_name <> 'dt_licexm'
+                        and table_name <> 'dt_medcat'
+                        and table_name <> 'dt_medinc'
+                        and table_name <> 'dt_medlic'
+                        and table_name <> 'dt_medrex'
+                        and table_name <> 'dt_medsig'
+                        order by 1;
+BEGIN
+    FOR stmt IN statements LOOP
+        EXECUTE 'alter TABLE ' || quote_ident(stmt.table_name) || ' add Record_in_old int8;';
+    END LOOP;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+
+;
+
+-- функция поиска пустых таблиц.
+CREATE OR REPLACE FUNCTION "oms"."tables_count"("username" varchar)
+  RETURNS "pg_catalog"."void" AS $BODY$
+DECLARE
+count_rows INTEGER;
+    statements CURSOR FOR
+                        SELECT table_name as ss FROM information_schema.tables 
+                        where table_catalog=(select current_database())
+                        and table_schema = (select current_schema) ;
+BEGIN
+    FOR stmt IN statements LOOP
+        execute  'select count(*) from ' || quote_ident(stmt.ss) into  count_rows;
+                                if(count_rows=0) then
+                                raise notice '%',quote_ident(stmt.ss);
+                                end if;
+    END LOOP;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+        
+        
+        
+--создание столбца record_in_old
+select full_tables_record_in_old('f')
+;
+
+
+-- добавление warning-столбцов
+alter table dt_expinc add warning varchar (2000)
+;
+alter table dt_medlic add warning varchar (2000)
+
+*/
+
+;     -- вставка в oms.cb_okato
+INSERT into cb_okato(id,        temp_id,        bdate,        edate        ,okato_code_01,        okato_code_02,        okato_code_03,        okato_code_04        ,okato_name,        notes,        create_dt,        created_user_id        ,update_dt        ,updated_user_id,hash,record_in_old)
+select record_uq, 
+record_in,
+date_start,
+date_end,
+okato_code_01,
+okato_code_02,
+okato_code_03,
+okato_code_04,
+okato_name,
+okato_info,
+create_date,
+COALESCE(uI.id, 1),
+update_date,
+COALESCE(uU.id , 1),
+md5(record_in::TEXT), -- '12345',
+record_in_old
+from dblink('select record_uq, 
+(SELECT RECORD_UQ FROM test.oms.cb_okato WHERE record_in = rr.record_in order by date_start,date_end limit 1) , 
+date_start,
+date_end,
+okato_code_01,
+okato_code_02,
+okato_code_03,
+okato_code_04,
+okato_name,
+okato_info,
+create_date,
+create_user,
+update_date,
+update_user,
+record_in
+from test.oms.cb_okato rr')
+f(record_uq int, 
+record_in int8, 
+date_start timestamp,
+date_end timestamp,
+okato_code_01 varchar,
+okato_code_02 varchar,
+okato_code_03 varchar,
+okato_code_04 varchar,
+okato_name varchar,
+okato_info varchar,
+create_date timestamp,
+create_user VARCHAR,
+update_date timestamp,
+update_user VARCHAR,
+record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;     -- вставка в oms.cb_okopf
+--select * from cb_okopf
+insert into oms.cb_okopf(
+id,
+temp_id,
+bdate,
+edate,
+okopf_code,
+okopf_name,
+notes,
+create_dt,
+created_user_id        ,
+update_dt,
+updated_user_id,
+hash,
+record_in_old,okopf_group)
+select record_uq, record_in
+,date_start,        date_end,        okopf_code,        okopf_name,        notes,        create_date,        coalesce(uI.id,1),        update_date,        coalesce(uU.id,1), '12345',record_in_old,okopf_group
+from dblink('select record_uq,
+(SELECT RECORD_UQ FROM test.oms.cb_okopf WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,date_start,        date_end,        okopf_code,        okopf_name,        notes,        create_date,        create_user,        update_date,        update_user, record_in, okopf_group from test.oms.cb_okopf rr')
+f(record_uq int8,record_in int8,date_start timestamp,        date_end timestamp,        okopf_code varchar,        okopf_name varchar,        notes varchar,        create_date timestamp,        create_user varchar,        update_date timestamp,        update_user varchar, record_in_old int8,okopf_group VARCHAR)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;     -- вставка в oms.cd_acddeg
+insert into cd_acddeg(id,        temp_id,        bdate        ,edate        ,acddeg_code,        acddeg_name,        notes,        create_dt        ,created_user_id        ,update_dt,        updated_user_id        ,hash , record_in_old)
+select record_uq,        record_in,        date_start,        date_end        ,acddeg_code,        acddeg_name,        notes,        create_date,        COALESCE (uI.id, 1),        update_date        ,COALESCE( uU.id,1), '123456', record_in_old
+from dblink('select record_uq,        
+(SELECT RECORD_UQ FROM test.oms.cd_acddeg WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,        date_start,        date_end        ,acddeg_code,        acddeg_name,        notes,        create_date,        create_user,        update_date        ,update_user,record_in from test.oms.cd_acddeg rr')
+f(record_uq int8,        record_in int8,        date_start timestamp,        date_end timestamp        ,acddeg_code int2,        acddeg_name varchar,        notes varchar,        create_date timestamp,        create_user VARCHAR,        update_date        timestamp,update_user VARCHAR,record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;     -- вставка в oms.cd_cartyp
+insert into cd_cartyp(id,
+temp_id,
+bdate,
+edate,
+cartyp_code,
+cartyp_name,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,        record_in,        date_start,        date_end,        cartyp_code        ,cartyp_name,        notes        ,create_date,        COALESCE (uI.id, 1)        ,update_date        ,COALESCE( uU.id,1)        , '12345', record_in_old
+from dblink('select record_uq,        
+(SELECT RECORD_UQ FROM test.oms.cd_cartyp WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,        date_start,        date_end,        cartyp_code,        cartyp_name,        notes,        create_date,        create_user        ,update_date,        update_user,record_in from test.oms.cd_cartyp rr')
+f(record_uq int8,        record_in int8,        date_start timestamp,        date_end timestamp,        cartyp_code int2,        cartyp_name varchar,        notes varchar,        create_date timestamp,        create_user        varchar,update_date timestamp,        update_user varchar, record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;     -- вставка в oms.cd_depaff
+insert into cd_depaff(id,
+temp_id,
+bdate,
+edate,
+depaff_code,
+depaff_name,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,        record_in,        date_start,        date_end,        depaff_code        ,depaff_name,        notes        ,create_date,        COALESCE (uI.id, 1)        ,update_date        ,COALESCE( uU.id,1)        , '12345', record_in_old
+from dblink('select record_uq,        
+(SELECT RECORD_UQ FROM test.oms.cd_depaff WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,        date_start,        date_end,        depaff_code,        depaff_name,        notes,        create_date,        create_user        ,update_date,        update_user,record_in from test.oms.cd_depaff rr')
+f(record_uq int8,        record_in int8,        date_start timestamp,        date_end timestamp,        depaff_code int2,        depaff_name varchar,        notes varchar,        create_date timestamp,        create_user        varchar,update_date timestamp,        update_user varchar,record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;     -- вставка в oms.cd_exphss
+insert into cd_exphss(id,
+temp_id,
+bdate,
+edate,
+exphss_code,
+exphss_name,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,        record_in,        date_start,        date_end,        exphss_code        ,exphss_name,        notes        ,create_date,        COALESCE (uI.id, 1)        ,update_date        ,COALESCE( uU.id,1)        , '12345', record_in_old
+from dblink('select record_uq,        
+(SELECT RECORD_UQ FROM test.oms.cd_exphss WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,        date_start,        date_end,        exphss_code,        exphss_name,        notes,        create_date,        create_user        ,update_date,        update_user, record_in from test.oms.cd_exphss rr')
+f(record_uq int8,        record_in int8,        date_start timestamp,        date_end timestamp,        exphss_code int2,        exphss_name varchar,        notes varchar,        create_date timestamp,        create_user        varchar,update_date timestamp,        update_user varchar, record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;     -- вставка в oms.cd_expoff
+insert into cd_expoff(id,
+temp_id,
+bdate,
+edate,
+expoff_code,
+expoff_name,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,        record_in,        date_start,        date_end,        expoff_code        ,expoff_name,        notes        ,create_date,        COALESCE (uI.id, 1)        ,update_date        ,COALESCE( uU.id,1)        , '12345',record_in_old
+from dblink('select record_uq,        
+(SELECT RECORD_UQ FROM test.oms.cd_expoff WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,        date_start,        date_end,        expoff_code,        expoff_name,        notes,        create_date,        create_user        ,update_date,        update_user,record_in from test.oms.cd_expoff rr')
+f(record_uq int8,        record_in int8,        date_start timestamp,        date_end timestamp,        expoff_code int2,        expoff_name varchar,        notes varchar,        create_date timestamp,        create_user        varchar,update_date timestamp,        update_user varchar,record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+;     -- вставка в oms.cd_exprex
+insert into cd_exprex(id,
+temp_id,
+bdate,
+edate,
+exprex_code,
+exprex_name,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,        record_in,        date_start,        date_end,        exprex_code        ,exprex_name,        notes        ,create_date,        COALESCE (uI.id, 1)        ,update_date        ,COALESCE( uU.id,1)        , '12345',record_in_old
+from dblink('select record_uq,        
+(SELECT RECORD_UQ FROM test.oms.cd_exprex WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,        date_start,        date_end,        exprex_code,        exprex_name,        notes,        create_date,        create_user        ,update_date,        update_user ,record_in from test.oms.cd_exprex rr')
+f(record_uq int8,        record_in int8,        date_start timestamp,        date_end timestamp,        exprex_code int2,        exprex_name varchar,        notes varchar,        create_date timestamp,        create_user        varchar,update_date timestamp,        update_user varchar, record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+;     -- вставка в oms.cd_insrex
+
+insert into cd_insrex(id,
+temp_id,
+bdate,
+edate,
+insrex_code,
+insrex_name,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,        record_in,        date_start,        date_end,        insrex_code        ,insrex_name,        notes        ,create_date,        COALESCE (uI.id, 1)        ,update_date        ,COALESCE( uU.id,1)        , '12345',record_in_old
+from dblink('select record_uq,        
+(SELECT RECORD_UQ FROM test.oms.cd_insrex WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,        date_start,        date_end,        insrex_code,        insrex_name,        notes,        create_date,        create_user        ,update_date,        update_user,record_in from test.oms.cd_insrex rr')
+f(record_uq int8,        record_in int8,        date_start timestamp,        date_end timestamp,        insrex_code int2,        insrex_name varchar,        notes varchar,        create_date timestamp,        create_user        varchar,update_date timestamp,        update_user varchar,record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+;     -- вставка в oms.cd_inssub
+insert into cd_inssub(id,
+temp_id,
+bdate,
+edate,
+inssub_code,
+inssub_name,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,        record_in,        date_start,        date_end,        inssub_code        ,inssub_name,        notes        ,create_date,        COALESCE (uI.id, 1)        ,update_date        ,COALESCE( uU.id,1)        , '12345',record_in_old
+from dblink('select record_uq,        
+(SELECT RECORD_UQ FROM test.oms.cd_inssub WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,        date_start,        date_end,        inssub_code,        inssub_name,        notes,        create_date,        create_user        ,update_date,        update_user,record_in from test.oms.cd_inssub rr')
+f(record_uq int8,        record_in int8,        date_start timestamp,        date_end timestamp,        inssub_code int2,        inssub_name varchar,        notes varchar,        create_date timestamp,        create_user        varchar,update_date timestamp,        update_user varchar,record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+
+;     -- вставка в oms.cd_jobmed
+insert into cd_jobmed(id,
+temp_id,
+bdate,
+edate,
+jobmed_code,
+jobmed_name,
+jobmed_high,
+jobmed_okso,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,
+record_in,
+date_start,
+date_end,
+jobmed_code,
+jobmed_name,
+jobmed_high,
+jobmed_okso,
+notes,
+create_date,
+COALESCE (uI.id, 1),
+update_date,
+COALESCE( uU.id,1),
+'12345', record_in_old
+from dblink('select record_uq,
+(SELECT RECORD_UQ FROM test.oms.cd_jobmed WHERE record_in = rr.record_in order by date_start,date_end limit 1),
+date_start,
+date_end,
+jobmed_code,
+jobmed_name,
+jobmed_high,
+jobmed_okso,
+notes,
+create_date,
+create_user,
+update_date,
+update_user, record_in
+from test.oms.cd_jobmed rr')
+f(record_uq int8,
+record_in int8,
+date_start timestamp,
+date_end timestamp,
+jobmed_code int2,
+jobmed_name varchar,
+jobmed_high int2,
+jobmed_okso int2,
+notes varchar,
+create_date timestamp,
+create_user varchar,
+update_date timestamp,
+update_user varchar,
+record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+;     -- вставка в om.cd_medrex
+insert into cd_medrex(id,
+temp_id,
+bdate,
+edate,
+medrex_code,
+medrex_name,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,        record_in,        date_start,        date_end,        medrex_code        ,medrex_name,        notes        ,create_date,        COALESCE (uI.id, 1)        ,update_date        ,COALESCE( uU.id,1)        , '12345',record_in_old
+from dblink('select record_uq,        
+(SELECT RECORD_UQ FROM test.oms.cd_medrex WHERE record_in = rr.record_in order by date_start,date_end limit 1),
+date_start,        date_end,        medrex_code,        medrex_name,        notes,        create_date,        create_user        ,update_date,        update_user,record_in from test.oms.cd_medrex rr')
+f(record_uq int8,        record_in int8,        date_start timestamp,        date_end timestamp,        medrex_code int2,        medrex_name varchar,        notes varchar,        create_date timestamp,        create_user        varchar,update_date timestamp,        update_user varchar,record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+;     -- вставка в oms.cd_medsub
+insert into cd_medsub(id,
+temp_id,
+bdate,
+edate,
+medsub_code,
+medsub_name,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,        record_in,        date_start,        date_end,        medsub_code        ,medsub_name,        notes        ,create_date,        COALESCE (uI.id, 1)        ,update_date        ,COALESCE( uU.id,1)        , '12345',record_in_old
+from dblink('select record_uq,        
+(SELECT RECORD_UQ FROM test.oms.cd_medsub WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,        date_start,        date_end,        medsub_code,        medsub_name,        notes,        create_date,        create_user        ,update_date,        update_user, record_in from test.oms.cd_medsub rr')
+f(record_uq int8,        record_in int8,        date_start timestamp,        date_end timestamp,        medsub_code int2,        medsub_name varchar,        notes varchar,        create_date timestamp,        create_user        varchar,update_date timestamp,        update_user varchar,record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+;     -- вставка в oms.cd_qlfcat
+insert into cd_qlfcat(id,
+temp_id,
+bdate,
+edate,
+qlfcat_code,
+qlfcat_name,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,        record_in,        date_start,        date_end,        qlfcat_code        ,qlfcat_name,        notes        ,create_date,        COALESCE (uI.id, 1)        ,update_date        ,COALESCE( uU.id,1)        , '12345',record_in_old
+from dblink('select record_uq,        
+(SELECT RECORD_UQ FROM test.oms.cd_qlfcat WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,        date_start,        date_end,        qlfcat_code,        qlfcat_name,        notes,        create_date,        create_user        ,update_date,        update_user,record_in from test.oms.cd_qlfcat rr')
+f(record_uq int8,        record_in int8,        date_start timestamp,        date_end timestamp,        qlfcat_code int2,        qlfcat_name varchar,        notes varchar,        create_date timestamp,        create_user        varchar,update_date timestamp,        update_user varchar,record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+
+
+
+;     -- вставка в oms.dt_tsfoms
+--select * from oms.dt_tsfoms where record_in_old=4665572
+insert into dt_tsfoms(
+id,
+temp_id,
+bdate,
+edate,
+cb_okato_id,
+oms_code,
+oms_name,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old,
+-- добавлено перед дампом
+oms_full_name  , oms_ogrn ,oms_pindex,oms_address,ceo_surname,        ceo_fstname,        ceo_patname  ,        oms_phone,oms_fax,        oms_email  ,                oms_www                 ,                branch_count        
+
+)
+select 
+record_uq,
+record_in,
+date_start,
+date_end,
+(select id from cb_okato where record_in_old=record_in_okato),
+oms_code,
+oms_name,
+create_date,
+COALESCE(uI.id, 1),
+update_date,
+COALESCE(uU.id, 1), '12345',
+record_in_old,
+-- добавлено перед дампом
+oms_full  , oms_ogrn ,oms_pindex,oms_address,ceo_surname,        ceo_fstname,        ceo_patname  ,        oms_phone,oms_fax,        oms_email  ,                oms_www                 ,                qty_branch        
+--select * from dt_tsfoms
+from dblink('select 
+record_uq ,
+(SELECT RECORD_UQ FROM test.oms.dt_tsfoms WHERE record_in = rr.record_in order by date_start,date_end limit 1) ,
+date_start ,
+date_end ,
+record_in_okato ,
+oms_code ,
+oms_name ,
+create_date ,
+create_user ,
+update_date ,
+update_user , 
+record_in,
+-- добавлено перед дампом
+oms_full  , oms_ogrn ,oms_pindex,oms_address,ceo_surname,        ceo_fstname,        ceo_patname  ,        oms_phone,oms_fax,        oms_email  ,                oms_www                 ,                qty_branch        
+from test.oms.dt_tsfoms rr')
+f( 
+record_uq int8,
+record_in int8,
+date_start timestamp,
+date_end timestamp,
+record_in_okato int8,
+oms_code varchar,
+oms_name varchar,
+create_date timestamp,
+create_user varchar,
+update_date timestamp,
+update_user varchar,
+record_in_old int8,
+-- добавлено перед дампом
+ oms_full varchar(250)  ,oms_ogrn varchar(15),oms_pindex varchar(60),oms_address varchar(250),ceo_surname varchar(40),        ceo_fstname varchar(40),        ceo_patname varchar(40) ,        oms_phone varchar(40),  oms_fax varchar(40),        oms_email varchar(50)  ,        oms_www varchar(50)         ,                qty_branch        integer
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+order by record_uq
+
+
+;     -- вставка в oms.dt_expert
+--select * from dt_expert where record_in_old=7952282
+insert into dt_expert(id,
+temp_id,
+bdate,
+edate,
+dt_tsfoms_id, 
+cb_okato_id,
+exp_code,
+exp_surname,
+exp_fstname,
+exp_patname,
+exp_snils,
+exp_phone1,
+exp_phone2,
+exp_email,
+notes,
+oms_status,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+record_in_old
+)
+/*
+select * from dt_tsfoms where id=4665607
+2014-03-11 18:01:20
+--select * from cb_okato where temp_id=4663721
+*/
+select record_uq,
+record_in,
+date_start,
+date_end,
+(select id from oms.dt_tsfoms t where t.record_in_old = record_in_tsfoms order by bdate limit 1),
+(select id from oms.cb_okato t where t.record_in_old = record_in_okato order by bdate limit 1),
+exp_code,
+exp_surname,
+exp_fstname,
+exp_patname,
+exp_snils,
+exp_phone1,
+exp_phone2,
+exp_email,
+notes,
+oms_status,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1),
+record_in_old
+from dblink('select record_uq,
+(SELECT RECORD_UQ FROM test.oms.dt_expert WHERE record_in = rr.record_in order by date_start,date_end limit 1) ,
+date_start,
+date_end,
+record_in_tsfoms,
+record_in_okato,
+exp_code,
+exp_surname,
+exp_fstname,
+exp_patname,
+exp_snils,
+exp_phone1,
+exp_phone2,
+exp_email,
+notes,
+oms_status,
+create_date,
+create_user,
+update_date,
+update_user,
+record_in
+from test.oms.dt_expert rr')
+f(record_uq int8,
+record_in int8,
+date_start timestamp,
+date_end timestamp,
+record_in_tsfoms int8,
+record_in_okato int8,
+exp_code varchar,
+exp_surname varchar,
+exp_fstname varchar,
+exp_patname varchar,
+exp_snils varchar,
+exp_phone1 varchar,
+exp_phone2 varchar,
+exp_email varchar,
+notes varchar,
+oms_status int8,
+create_date timestamp,
+create_user varchar,
+update_date timestamp,
+update_user varchar,
+record_in_old int8
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+/*
+select * from dt_tsfoms (4665608)
+*/
+
+
+
+
+
+;     -- вставка в oms.dt_expinc
+
+insert into dt_expinc(id,
+dt_expert_id,
+inc_date_start,
+rex_date_end,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id
+)
+/*
+
+select * from dt_expinc  where warning <>''
+truncate table dt_expinc cascade
+select * from dt_expert where exp_fstname ='ФАЗЫЛ'
+select * from dt_tsfoms where id=4665607
+2014-03-11 18:01:20
+--select * from cb_okato where temp_id=4663721
+*/
+select record_uq,
+(select id from oms.dt_expert t where t.record_in_old = f.record_in_expert order by bdate,edate limit 1),
+inc_date_start,
+rex_date_end,
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_in_expert,
+inc_date_start,
+rex_date_end,
+notes,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.dt_expinc ') --where record_uq=8464982
+f(record_uq int8,
+record_in_expert int8,
+inc_date_start timestamp,
+rex_date_end timestamp,
+notes varchar,
+create_date timestamp,
+create_user varchar,
+update_date timestamp,
+update_user varchar
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+--select * from dt_expoff
+;     -- вставка в oms.dt_expoff
+insert into dt_expoff(id,
+dt_expinc_id,
+cd_expoff_id,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id
+)
+select record_uq,
+record_uq_expinc,
+(select id from oms.cd_expoff t where t.record_in_old = f.record_in_expoff order by bdate,edate limit 1),
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_uq_expinc,
+record_in_expoff,
+notes,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.dt_expoff ') --where record_uq=8464982
+f(record_uq int8,
+record_uq_expinc int8,
+record_in_expoff int8,
+notes varchar,
+create_date timestamp,
+create_user varchar,
+update_date timestamp,
+update_user varchar
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+/*
+Пост.cсылка Редактировать Удалить
+akrasilnikov Красильников Артем добавил комментарий - 2 дн. назад - Изменен
+Правка lower:
+        alter table "oms"."dt_explic"
+        drop
+         CONSTRAINT "ch_dt_explic_type" 
+
+        alter table "oms"."dt_explic"
+        add 
+         CONSTRAINT "ch_dt_explic_type" CHECK (((lic_type)::text = ANY ((ARRAY['Сертификат'::character varying, 'Ученая степень'::character varying])::text[])))
+alter table dt_explic drop CONSTRAINT ch_dt_explic_type
+alter table dt_explic add CONSTRAINT "ch_dt_explic_type" CHECK (((lic_type)::text = ANY ((ARRAY['Сертификат'::character varying, 'Ученая степень'::character varying])::text[])))
+         */
+         
+;     -- вставка в oms.dt_explic
+--select * from cd_jobmed limit 4
+--select * from cd_acddeg limit 4
+insert into dt_explic(id,
+dt_expert_id,
+lic_type,
+cd_jobmed_id,
+cd_qlfcat_id,
+cd_acddeg_id,
+cd_exphss_id,
+lic_spec_year,
+lic_spec_work,
+lic_spec_post,
+lic_till,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id
+)
+select record_uq,
+(select id from oms.dt_expert t where t.record_in_old = f.record_in_expert order by bdate,edate limit 1 ),
+lic_type,
+(select id from cd_jobmed where record_in_old = record_in_jobmed),
+(select id from cd_qlfcat where record_in_old = record_in_qlfcat),
+(select id from cd_acddeg where record_in_old = record_in_acddeg),
+(select id from cd_exphss where record_in_old = record_in_exphss),
+lic_spec_year,
+lic_spec_work,
+lic_spec_post,
+lic_till,
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_in_expert,
+lic_type,
+record_in_jobmed,
+record_in_qlfcat,
+record_in_acddeg,
+record_in_exphss,
+lic_spec_year,
+lic_spec_work,
+lic_spec_post,
+lic_till,
+notes,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.dt_explic') 
+f(record_uq int8,
+record_in_expert int8,
+lic_type VARCHAR,
+record_in_jobmed int8,
+record_in_qlfcat int8,
+record_in_acddeg int8,
+record_in_exphss int8,
+lic_spec_year int2,
+lic_spec_work varchar,
+lic_spec_post varchar,
+lic_till TIMESTAMP,
+notes varchar,
+create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;     -- вставка в oms.dt_exprex
+--select * from cd_exprex limit 4
+--select * from dt_exprex limit 5
+insert into dt_exprex(id,
+dt_expinc_id,
+cd_exprex_id,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id
+)
+select record_uq,
+record_uq_expinc,
+(select id from cd_exprex where record_in_old=record_in_exprex),
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_uq_expinc,
+record_in_exprex,
+notes,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.dt_exprex') --where record_uq=8464982
+f(record_uq int8,
+record_uq_expinc int8,
+record_in_exprex int8,
+notes VARCHAR,
+create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;     -- вставка в oms.dt_inscom
+--select * from dt_inscom limit 5
+insert into dt_inscom(
+id,
+temp_id,
+bdate,edate,dt_tsfoms_id,cb_okato_id,cb_okopf_id,cd_inssub_id,oms_status_id,
+ins_code,ins_short_name,ins_full_name,ins_inn,ins_ogrn,ins_kpp,ins_phone,ins_email,ins_fax,ins_www,ins_jpindex,ins_jaddress,ins_ppindex,ins_paddress,ceo_surname,ceo_fstname,ceo_patname,notes,
+map_lat,map_lng,map_address,create_dt,created_user_id,update_dt,updated_user_id,
+record_in_old)
+select 
+record_uq,
+record_in,date_start,date_end,
+(select id from dt_tsfoms t where t.record_in_old = record_in_tsfoms order by bdate,edate limit 1),
+(select id from cb_okato t where t.record_in_old = record_in_okato order by bdate,edate limit 1),
+(select id from cb_okopf t where t.record_in_old = record_in_okopf order by bdate,edate limit 1),
+(select id from cd_inssub t where t.record_in_old = record_in_inssub order by bdate,edate limit 1),
+oms_status,
+ins_code,ins_name,ins_full,ins_inn,ins_ogrn,ins_kpp,ins_phone,ins_email,ins_fax,ins_www,ins_jpindex,
+ins_jaddress,ins_ppindex,ins_paddress,ceo_surname,ceo_fstname,ceo_patname,notes,
+map_lat,map_lng,map_address,
+create_date,COALESCE( uI.id,1),update_date,COALESCE( uU.id,1),record_in_old
+from dblink('select record_uq,
+(SELECT RECORD_UQ FROM test.oms.dt_inscom WHERE record_in = rr.record_in order by date_start,date_end limit 1),
+date_start,date_end,record_in_tsfoms,record_in_okato,record_in_okopf,
+ins_code,ins_name,ins_full,ins_inn,ins_ogrn,ins_kpp,ins_phone,ins_email,ins_fax,ins_www,ins_jpindex,
+ins_jaddress,ins_ppindex,ins_paddress,ceo_surname,ceo_fstname,ceo_patname,create_date,create_user,update_date,
+update_user,notes,record_in_inssub,oms_status,map_lat,map_lng,map_address,record_in 
+from test.oms.dt_inscom rr')
+
+f(record_uq int8,record_in int8,date_start timestamp,date_end timestamp,record_in_tsfoms int8,record_in_okato int8,record_in_okopf int8,
+ins_code varchar,ins_name varchar,ins_full varchar,ins_inn varchar,ins_ogrn varchar,ins_kpp varchar,ins_phone varchar,ins_email varchar, ins_fax varchar,ins_www varchar,ins_jpindex varchar,
+ins_jaddress varchar,ins_ppindex varchar,ins_paddress varchar,ceo_surname varchar,ceo_fstname varchar,ceo_patname varchar,create_date TIMESTAMP,create_user varchar,update_date TIMESTAMP,
+update_user varchar,notes text,record_in_inssub int8,oms_status int2,map_lat varchar,map_lng varchar,map_address varchar,record_in_old int8)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;-- вставка в oms.dt_insinc
+--select * from dt_insinc where id=7462042
+--select * from dt_inscom where record_in_old=7462041
+insert into dt_insinc(id,
+dt_inscom_id,
+bdate,
+edate,
+active_policy,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id
+)
+select
+record_uq,
+(select id from dt_inscom where record_in_old = record_in_inscom order by bdate,edate limit 1),
+inc_date_start,
+rex_date_end,
+rex_police,
+notes,
+create_date,COALESCE( uI.id,1),update_date,COALESCE( uU.id,1)
+
+from 
+dblink('select record_uq,
+record_in_inscom,
+inc_date_start,
+rex_date_end,
+rex_police,
+notes,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.dt_insinc')
+f(record_uq int8,
+record_in_inscom int8,
+inc_date_start TIMESTAMP,
+rex_date_end TIMESTAMP,
+rex_police int2,
+notes varchar,
+create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;-- вставка в oms.dt_insrex
+--select * from dt_insrex where id=7462165
+insert into dt_insrex(id,
+dt_insinc_id,
+cd_insrex_id,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id
+)
+select 
+record_uq,
+record_uq_insinc,
+(select id from  cd_insrex where record_in_old=record_in_insrex),
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select
+record_uq,
+record_uq_insinc,
+record_in_insrex,
+notes,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.dt_insrex') 
+f(record_uq int8,
+record_uq_insinc int8,
+record_in_insrex int8,
+notes VARCHAR,
+create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;-- вставка в oms.dt_inssig
+--select * from dt_inssig
+insert into dt_inssig(
+id,
+dt_inscom_id,
+notification_date,
+insured_count,
+notes,
+sig_year,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id
+)
+select record_uq,
+(select id from dt_inscom where record_in_old = record_in_inscom order by bdate,edate limit 1),
+sig_date,
+qty_insure,
+notes,
+sig_year,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_in_inscom,
+sig_date,
+qty_insure,
+notes,
+sig_year,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.dt_inssig') 
+f(record_uq int8,
+record_in_inscom int8,
+sig_date TIMESTAMP,
+qty_insure int8,
+notes VARCHAR,
+sig_year timestamp,
+create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;-- вставка в oms.dt_licexm
+insert into dt_licexm(id,
+dt_explic_id,
+exm_year,
+exm_qty_exam,
+exm_qty_reex,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id
+)
+select record_uq,
+record_uq_explic,
+exm_year,
+exm_qty_exam,
+exm_qty_reex,
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_uq_explic,
+exm_year,
+exm_qty_exam,
+exm_qty_reex,
+notes,
+create_date,
+create_user,
+update_date,
+update_user from test.oms.dt_licexm')
+f(record_uq int8,
+record_uq_explic int8,
+exm_year timestamp,
+exm_qty_exam int4,
+exm_qty_reex int4,
+notes VARCHAR,
+create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;    -- вставка в oms.dt_medcom
+-- select * from dt_medcom
+insert into dt_medcom(id,temp_id,bdate,edate,dt_tsfoms_id,cb_okato_id,cb_okopf_id,cd_depaff_id,cd_medsub_id,
+med_code,med_short_name,med_full_name,med_inn,med_ogrn,med_kpp,med_phone,med_email,med_fax,med_www,med_pindex,med_paddress,
+ceo_surname,ceo_fstname,ceo_patname,notes,oms_status,map_lat,map_lng,map_address,
+create_dt,created_user_id,update_dt,updated_user_id,record_in_old)
+select record_uq,
+record_in
+,date_start,date_end,
+(select id from dt_tsfoms t where t.record_in_old = record_in_tsfoms order by bdate,edate limit 1),
+(select id from cb_okato t where t.record_in_old =  record_in_okato order by bdate,edate limit 1),
+(select id from cb_okopf t where t.record_in_old =  record_in_okopf order by bdate,edate limit 1),
+(select id from cd_depaff t where t.record_in_old = record_in_depaff order by bdate,edate limit 1),
+(select id from cd_medsub t where t.record_in_old = record_in_medsub order by bdate,edate limit 1),
+med_code,med_name,med_full,med_inn,med_ogrn,med_kpp,med_phone,med_email,med_fax,med_www,
+med_pindex,med_paddress,ceo_surname,ceo_fstname,ceo_patname,notes,oms_status,map_lat,map_lng,map_address,create_date,COALESCE( uI.id,1),update_date,COALESCE( uU.id,1), record_in_old
+from dblink('select record_uq,
+(SELECT RECORD_UQ FROM test.oms.dt_medcom WHERE record_in = rr.record_in order by date_start,date_end limit 1)
+,date_start,date_end,record_in_tsfoms,record_in_okato,record_in_okopf,
+record_in_depaff,record_in_medsub,med_code,med_name,med_full,med_inn,med_ogrn,med_kpp,med_phone,med_email,med_fax,med_www,
+med_pindex,med_paddress,ceo_surname,ceo_fstname,ceo_patname,notes,oms_status,map_lat,map_lng,map_address,create_date,create_user,update_date, update_user,record_in
+from test.oms.dt_medcom rr')
+f(record_uq int8,
+record_in int8,
+date_start timestamp,
+date_end timestamp,
+record_in_tsfoms int8,
+record_in_okato int8,
+record_in_okopf int8,
+record_in_depaff int8,
+record_in_medsub int8,
+med_code varchar,
+med_name varchar,
+med_full varchar,
+med_inn varchar,
+med_ogrn varchar,
+med_kpp varchar,
+med_phone varchar,
+med_email varchar,
+med_fax varchar,
+med_www varchar,
+med_pindex varchar,
+med_paddress varchar,
+ceo_surname varchar,
+ceo_fstname varchar,
+ceo_patname varchar,
+notes text,
+oms_status int2,
+map_lat varchar,
+map_lng varchar,
+map_address varchar,
+create_date timestamp,
+create_user varchar,
+update_date timestamp, 
+update_user varchar,
+record_in_old int8
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+;-- вставка в oms.dt_medlic
+--select * from dt_medlic
+insert into dt_medlic(id,
+dt_medcom_id,
+lic_date_start,
+lic_date_end,
+lic_number,
+notes,
+lic_date_term,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+warning)
+select record_uq,
+coalesce((select id from dt_medcom where record_in_old = record_in_medcom order by bdate,edate limit 1),
+                                        (select id from dt_medcom limit 1)),
+lic_date_start,
+lic_date_end,
+lic_number,
+notes,
+lic_date_term,
+create_date,COALESCE( uI.id,1),update_date,COALESCE( uU.id,1),
+case when (select 1 from dt_medcom where record_in_old = record_in_medcom order by bdate,edate limit 1)='1' then '' else 'связи не найдено! взят первый попавшийся ID из dt_medcom!!' end
+from dblink('select record_uq,
+record_in_medcom,
+lic_date_start,
+lic_date_end,
+lic_number,
+notes,
+lic_date_term,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.dt_medlic')
+f(record_uq int8,
+record_in_medcom int8,
+lic_date_start TIMESTAMP,
+lic_date_end TIMESTAMP,
+lic_number varchar,
+notes varchar,
+lic_date_term timestamp,
+create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+--select * from dt_medlic where warning <>''
+
+
+;-- вставка в oms.dt_medcat
+--select * from dt_medcat
+insert into dt_medcat(id,
+dt_medlic_id,
+cd_cartyp_id,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id)
+select record_uq,
+record_uq_medlic,
+(select id from cd_cartyp where record_in_old = record_in_cartyp),
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_uq_medlic,
+record_in_cartyp,
+notes,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.dt_medcat')
+f(record_uq int8,
+record_uq_medlic int8,
+record_in_cartyp int8,
+notes VARCHAR,
+create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+; -- вставка в oms.dt_medinc
+--select * from dt_medinc
+insert into dt_medinc(id,
+dt_medcom_id,bdate,edate,notes,create_dt,created_user_id,update_dt,updated_user_id)
+select record_uq,
+(select id from dt_medcom where record_in_old = record_in_medcom order by bdate,edate limit 1),
+inc_date_start,
+rex_date_end,
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_in_medcom,
+inc_date_start,
+rex_date_end,
+notes,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.dt_medinc')
+f(record_uq int8,
+record_in_medcom int8,
+inc_date_start TIMESTAMP,
+rex_date_end TIMESTAMP,
+notes varchar,
+create_date TIMESTAMP,
+create_user VARCHAR,
+update_date TIMESTAMP,
+update_user VARCHAR)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+; -- вставка в oms.dt_medrex
+--select * from oms.dt_medrex
+insert into dt_medrex( id,dt_medinc_id,cd_medrex_id,notes,create_dt,created_user_id,update_dt,updated_user_id)
+select record_uq,
+record_uq_medinc,
+(select id from cd_medrex where record_in_old = record_in_medrex),
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_uq_medinc,
+record_in_medrex,
+notes,
+create_date,
+create_user,
+update_date,
+update_user 
+from test.oms.dt_medrex')
+f(
+record_uq int8,
+record_uq_medinc int8,
+record_in_medrex int8,
+notes varchar,
+create_date timestamp,
+create_user varchar,
+update_date timestamp,
+update_user varchar) 
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+; -- вставка в oms.dt_medsig
+--select * from dt_medsig
+insert into dt_medsig(id,
+dt_medcom_id,
+notification_date,
+notification_year,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id)
+select record_uq,
+(select id from dt_medcom where record_in_old = record_in_medcom order by bdate,edate limit 1),
+sig_date,
+sig_year,
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_in_medcom,
+sig_date,
+notes,
+create_date,
+create_user,
+update_date,
+update_user,
+sig_year 
+from test.oms.dt_medsig')
+f(record_uq int8,
+record_in_medcom int8,
+sig_date timestamp,
+notes VARCHAR,
+create_date timestamp,
+create_user VARCHAR,
+update_date timestamp, 
+update_user VARCHAR,
+sig_year TIMESTAMP)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+;
+
+
+
+; -- вставка в oms.dt_inslic
+
+insert into dt_inslic(id,
+dt_inscom_id,
+lic_date_start,
+lic_date_end,
+lic_number,
+notes,
+lic_date_term,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id)
+select record_uq,
+(select id from dt_inscom where record_in_old = record_in_inscom order by bdate,edate limit 1),
+lic_date_start,
+lic_date_end,
+lic_number,
+notes,
+lic_date_term,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_in_inscom,
+lic_date_start,
+lic_date_end,
+lic_number,
+notes,
+create_date,
+create_user,
+update_date,
+update_user,
+lic_date_term
+from test.oms.dt_inslic')
+f(record_uq int8,
+record_in_inscom int8,
+lic_date_start TIMESTAMP,
+lic_date_end TIMESTAMP,
+lic_number VARCHAR,
+notes VARCHAR,
+create_date TIMESTAMP,
+create_user VARCHAR,
+update_date TIMESTAMP,
+update_user VARCHAR,
+lic_date_term TIMESTAMP
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+; -- вставка в oms.ca_scandoc
+
+insert into oms.ca_scandoc(id,
+dt_inslic_id,
+dt_inssig_id,
+dt_medlic_id,
+dt_medsig_id,
+dt_explic_id,
+doc_copy,doc_page,notes,create_dt,created_user_id,update_dt,updated_user_id)
+
+select record_uq,
+record_uq_inslic,
+record_uq_inssig,
+record_uq_medlic,
+record_uq_medsig,
+record_uq_explic,
+doc_copy,
+doc_page,
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+record_uq_inslic,
+record_uq_inssig,
+record_uq_medlic,
+record_uq_medsig,
+record_uq_explic,
+doc_copy,
+doc_page,
+notes,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.ca_scandoc')
+f(record_uq int8,
+record_uq_inslic int8,
+record_uq_inssig int8,
+record_uq_medlic int8,
+record_uq_medsig int8,
+record_uq_explic int8,
+doc_copy bytea,
+doc_page VARCHAR,
+notes varchar,
+create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+                        
+; -- вставка в oms.cd_region
+insert into cd_region(id,
+temp_id,
+bdate,
+edate,
+region_code,
+region_name,
+region_order,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,        record_in,        date_start,        date_end,        region_code,        region_name,        region_order ,notes,        create_date,        
+COALESCE( uI.id,1),update_date,COALESCE( uU.id,1),        '12345', record_in_old
+from dblink('select  
+record_uq,        
+(SELECT record_uq FROM test.oms.cd_region WHERE record_in = rr.record_in order by date_start,date_end limit 1),
+date_start,        date_end,        region_code,        region_name, region_order,        notes,
+create_date,
+create_user,
+update_date,
+update_user,
+record_in
+from test.oms.cd_region rr') 
+f(record_uq int8,
+record_in int8,
+date_start timestamp,
+date_end timestamp,
+region_code int8,
+region_name VARCHAR,
+region_order int2,
+notes VARCHAR,
+create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar,
+record_in_old int8
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+; -- вставка в oms.cd_rearea
+
+insert into cd_rearea(id,
+temp_id,
+bdate,
+edate,
+cb_okato_id,
+cd_region_id,
+rearea_code,
+rearea_name,
+rearea_order,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+hash,
+record_in_old
+)
+select record_uq,
+record_in,        
+date_start,
+date_end,
+(select id from cb_okato t where t.record_in_old = record_in_okato order by bdate,edate limit 1),
+(select id from cd_region t where t.record_in_old = record_in_region order by bdate,edate limit 1),
+rearea_code,
+rearea_name,
+rearea_order,
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1), '12345',
+record_in_old
+from dblink('select  record_uq,
+(SELECT record_uq FROM test.oms.cd_rearea WHERE record_in = rr.record_in order by date_start,date_end limit 1),
+date_start,
+date_end,
+record_in_okato,
+record_in_region,
+rearea_code,
+rearea_name,
+rearea_order,
+notes,
+create_date,
+create_user,
+update_date,
+update_user,
+record_in
+from test.oms.cd_rearea rr') 
+f(record_uq int8,
+record_in int8,
+date_start timestamp,
+date_end timestamp,
+record_in_okato int8,
+record_in_region int8,
+rearea_code int2,
+rearea_name varchar,
+rearea_order int2,
+notes VARCHAR,
+create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar,
+record_in_old int8
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+; -- вставка в oms.ca_listing
+-- select * from ca_listing
+insert into ca_listing(
+id,
+listing_code,
+listing_label,
+listing_name,
+listing_status,
+issue_sign,
+issue_date,
+listing_type,
+listing_docs,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id,
+start_dt
+)
+select record_uq,	listing_code,	listing_label,	listing_name,	listing_status,	issue_sign,	issue_date,	listing_type,	listing_docs,	notes,	create_date,	COALESCE( uI.id,1) ,	update_date,	COALESCE( uU.id,1) ,	start_date
+from dblink('select record_uq,	listing_code,	listing_label,	listing_name,	listing_status,	issue_sign,	issue_date,	listing_type,	listing_docs,	notes,	create_date,	create_user,	update_date,	update_user,	start_date from test.oms.ca_listing rr')
+f(record_uq int8,   listing_code  VARCHAR, listing_label VARCHAR, listing_name VARCHAR,  listing_status int2, issue_sign VARCHAR, issue_date TIMESTAMP, listing_type VARCHAR, listing_docs bytea,        notes varchar,        create_date timestamp,        create_user        varchar,update_date timestamp,        update_user varchar,start_date TIMESTAMP )
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+; -- вставка в oms.ca_version
+
+insert into ca_version (
+id,
+listing_id,
+load_status,
+operation,
+version_date,
+notes,
+create_dt,
+created_user_id,
+version_file,
+version_elog,
+loading_file
+)
+select record_uq,
+record_uq_listing,
+is_current,
+version_code,
+version_date,
+notes,
+create_date,
+COALESCE( uI.id,1),
+version_file,
+version_elog,
+loading_file
+ from dblink('select record_uq,
+record_uq_listing,
+is_current,
+version_code,
+version_date,
+notes,
+create_date,
+create_user,
+version_file,
+version_elog,
+loading_file from test.oms.ca_version rr')
+f(record_uq int8,
+record_uq_listing int8,
+is_current int2,
+version_code varchar,
+version_date timestamp,
+notes varchar,
+create_date timestamp,
+create_user varchar,
+version_file varchar,
+version_elog varchar,
+loading_file bytea
+)
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+
+
+
+; -- вставка в oms.ca_message
+
+insert into ca_message(id,
+message_code,
+message_type,
+message_text,
+notes,
+create_dt,
+created_user_id,
+update_dt,
+updated_user_id
+)
+select record_uq,
+message_code,
+message_type,
+message_text,
+notes,
+create_date,
+COALESCE( uI.id,1),
+update_date,
+COALESCE( uU.id,1)
+from dblink('select record_uq,
+message_code,
+message_type,
+message_text,
+notes,
+create_date,
+create_user,
+update_date,
+update_user
+from test.oms.ca_message rr')
+f(record_uq int8,   message_code  VARCHAR, message_type VARCHAR, message_text VARCHAR,  notes VARCHAR,      create_date TIMESTAMP,
+create_user varchar,
+update_date TIMESTAMP,
+update_user varchar ) 
+left join sec.user uI on lower(uI.user_login)=lower(f.create_user)
+left join sec.user uU on lower(uU.user_login)=lower(f.update_user)
+
+
+
+
+
+; -- вставка в oms.ca_lderror
+insert into ca_lderror(
+id,
+version_id,
+message_id,
+error_code,
+error_values,
+notes,
+create_dt,
+created_user_id,
+error_record
+)
+select RECORD_UQ,
+RECORD_UQ_VERSION,
+RECORD_UQ_MESSAGE,
+ERROR_CODE,
+ERROR_VALUES,
+NOTES,
+CREATE_DATE,
+COALESCE( uI.id,1),
+ERROR_RECORD 
+from dblink('select RECORD_UQ,
+RECORD_UQ_VERSION,
+RECORD_UQ_MESSAGE,
+ERROR_CODE,
+ERROR_VALUES,
+NOTES,
+CREATE_DATE,
+create_user,
+ERROR_RECORD
+from test.oms.ca_lderror rr')
+f(record_uq int8,   RECORD_UQ_VERSION  int8, RECORD_UQ_MESSAGE int8, ERROR_CODE VARCHAR,  ERROR_VALUES VARCHAR, notes varchar,        create_date timestamp,        create_user   VARCHAR , ERROR_RECORD text ) 
+left join sec.user uI on lower(uI.user_login)=lower(f.CREATE_USER)
+
+
+
+
+;--работа с полем oms.dt_medcom_med_phone
+
+
+with qwe as(
+select id, regexp_split_to_array(med_phone, ';') as ar
+from dt_medcom
+where med_phone like '%;%'
+)
+update dt_medcom tt
+set 
+med_phone_2=q.ar[2] ,
+med_phone=q.ar[1]
+from qwe q
+where tt.id= q.id
+
+;
+
+with qwe as(
+select id, med_phone, regexp_split_to_array(med_phone, ',') as ar
+from dt_medcom
+where med_phone like '%,%'
+)
+update dt_medcom tt
+set 
+med_phone_2=q.ar[2] ,
+med_phone=q.ar[1]
+from qwe q
+where tt.id= q.id
+
+

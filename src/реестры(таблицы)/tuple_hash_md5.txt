@@ -1,0 +1,262 @@
+
+-- working
+CREATE OR REPLACE FUNCTION "oms"."tuple_hash_md5"()
+RETURNS "pg_catalog"."trigger" AS $BODY$
+BEGIN
+NEW.hash := NULL;
+if TG_table_name = 'cd_cartyp' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.cartyp_code::TEXT,
+                        new.cartyp_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_region' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.region_code::TEXT,
+                        new.region_name::TEXT,
+                        new.region_order::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_rearea' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.cb_okato_id::TEXT,
+                        new.cd_region_id::TEXT,
+                        new.rearea_code::TEXT,
+                        new.rearea_name::TEXT,
+                        new.rearea_order::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cb_okopf' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.okopf_code::TEXT,
+                        new.okopf_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cb_okato' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.created_user_id::TEXT,
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.okato_code_01::TEXT,
+                        new.okato_code_02::TEXT,
+                        new.okato_code_03::TEXT,
+                        new.okato_code_04::TEXT,
+                        new.okato_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_acddeg' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.acddeg_code::TEXT,
+                        new.acddeg_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_depaff' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.depaff_code::TEXT,
+                        new.depaff_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_exphss' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.exphss_code::TEXT,
+                        new.exphss_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_expoff' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.expoff_code::TEXT,
+                        new.expoff_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_exprex' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.exprex_code::TEXT,
+                        new.exprex_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_insrex' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.insrex_code::TEXT,
+                        new.insrex_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_inssub' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.inssub_code::TEXT,
+                        new.inssub_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_jobmed' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.jobmed_code::TEXT,
+                        new.jobmed_name::TEXT,
+                        new.jobmed_high::TEXT,
+                        new.jobmed_okso::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_medrex' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.id::TEXT,
+                        new.temp_id::TEXT,
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.medrex_code::TEXT,
+                        new.medrex_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_medsub' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.medsub_code::TEXT,
+                        new.medsub_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'cd_qlfcat' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.qlfcat_code::TEXT,
+                        new.qlfcat_name::TEXT,
+                        new.notes::TEXT
+                        ));
+end if;
+if TG_table_name = 'dt_tsfoms' then
+        NEW.hash :=  md5(
+                        concat
+                        (
+                        new.bdate::TEXT,
+                        new.edate::TEXT,
+                        new.cb_okato_id::TEXT,
+                        new.oms_code::TEXT,
+                        new.oms_name::TEXT,
+                        new.oms_full_name::TEXT,
+                        new.oms_ogrn::TEXT,
+                        new.oms_pindex::TEXT,
+                        new.oms_address::TEXT,
+                        new.ceo_surname::TEXT,
+                        new.ceo_fstname::TEXT,
+                        new.ceo_patname::TEXT,
+                        new.oms_phone::TEXT,
+                        new.oms_fax::TEXT,
+                        new.oms_email::TEXT,
+                        new.oms_www::TEXT,
+                        new.branch_count::TEXT
+                        ));
+end if;
+
+RETURN NEW;
+END;
+$BODY$
+LANGUAGE plpgsql VOLATILE
+COST 100
+
+
+        ;
+
+        CREATE TRIGGER cd_cartyp_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_cartyp
+    FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+        CREATE TRIGGER cd_region_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_region
+    FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+        CREATE TRIGGER cd_rearea_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_rearea
+    FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+        CREATE TRIGGER cb_okopf_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cb_okopf
+    FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cb_okato_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cb_okato
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cd_acddeg_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_acddeg
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cd_depaff_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_depaff
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cd_exphss_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_exphss
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cd_expoff_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_expoff
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cd_exprex_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_exprex
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cd_insrex_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_insrex
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cd_inssub_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_inssub
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cd_jobmed_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_jobmed
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cd_medrex_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_medrex
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cd_medsub_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_medsub
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER cd_qlfcat_tuple_hash_md5 BEFORE INSERT OR UPDATE ON cd_qlfcat
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+  CREATE TRIGGER dt_tsfoms_tuple_hash_md5 BEFORE INSERT OR UPDATE ON dt_tsfoms
+          FOR EACH ROW EXECUTE PROCEDURE oms.tuple_hash_md5();
+                

@@ -1,0 +1,81 @@
+WITH xml_doc_list AS 
+    (
+        SELECT 
+            unnest (xpath ('/book/entries/descendant::entry', node)) AS rec
+        FROM 
+            xmlparse (DOCUMENT convert_from (pg_read_binary_file ('123.xml'), 'UTF8')) AS node
+    ), t as (
+        SELECT 
+            (xpath ('/entry/id/text ()'          , rec))[1]::TEXT AS id,
+            (xpath ('/entry/oid/text ()'              , rec))[1]::TEXT AS oid        ,
+            (xpath ('/entry/oldOid/text ()'           , rec))[1]::TEXT AS oldOid   ,
+            (xpath ('/entry/nameFull/text ()'           , rec))[1]::TEXT AS nameFull  ,
+            (xpath ('/entry/nameShort/text ()'               , rec))[1]::TEXT AS nameShort         ,
+            (xpath ('/entry/parentId/text ()'               , rec))[1]::TEXT AS parentId         ,
+            (xpath ('/entry/medicalSubjectId/text ()', rec))[1]::TEXT AS medicalSubjectId     ,
+            (xpath ('/entry/medicalSubjectName/text ()', rec))[1]::TEXT AS medicalSubjectName,
+            (xpath ('/entry/inn/text ()'  , rec))[1]::TEXT AS inn  ,      
+            (xpath ('/entry/kpp/text ()'  , rec))[1]::TEXT AS kpp  ,
+            (xpath ('/entry/ogrn/text ()'  , rec))[1]::TEXT AS ogrn  ,
+            (xpath ('/entry/regionId/text ()'  , rec))[1]::TEXT AS regionId  ,
+            (xpath ('/entry/regionName/text ()'  , rec))[1]::TEXT AS regionName  ,
+            (xpath ('/entry/organizationType/text ()'  , rec))[1]::TEXT AS organizationType  ,
+            (xpath ('/entry/moDeptName/text ()'  , rec))[1]::TEXT AS moDeptName  ,
+            (xpath ('/entry/founder/text ()'  , rec))[1]::TEXT AS founder  ,
+            (xpath ('/entry/deleteDate/text ()'  , rec))[1]::TEXT AS deleteDate  ,
+            (xpath ('/entry/deleteReason/text ()'  , rec))[1]::TEXT AS deleteReason  ,
+            (xpath ('/entry/createDate/text ()'  , rec))[1]::TEXT AS createDate  ,
+            (xpath ('/entry/modifyDate/text ()'  , rec))[1]::TEXT AS modifyDate  ,
+            (xpath ('/entry/moLevel/text ()'  , rec))[1]::TEXT AS moLevel  ,
+            (xpath ('/entry/moAgencyKind/text ()'  , rec))[1]::TEXT AS moAgencyKind  ,
+            (xpath ('/entry/profileAgencyKind/text ()'  , rec))[1]::TEXT AS profileAgencyKind 
+        FROM 
+            xml_doc_list --limit 1
+    )
+    SELECT 
+        concat
+        (
+            '
+            WITH t (id,oid , nameFull,  nameShort, parentId, medicalSubjectId, medicalSubjectName, inn, kpp, ogrn, regionId, regionName, organizationType, moDeptName, founder, deleteDate, deleteReason, createDate, modifyDate, moLevel, moAgencyKind, profileAgencyKind ) AS 
+            (
+                VALUES
+                ',
+                string_agg 
+                (
+                    format 
+                    (
+                        '(%s, %L, %L, %L, %L, %s, %L, %L, %L, %L, %s, %L, %s, %L, %L, %L::DATE, %L, %L::DATE, %L::DATE, %L, %L, %L)',
+                        id::int4, 
+			oid ::VARCHAR (40),  
+			 nameFull::VARCHAR (350), 
+			 nameShort::VARCHAR (350), 
+			 parentId::VARCHAR (50), 
+			 medicalSubjectId::int2, 
+			 medicalSubjectName::VARCHAR (100), 
+			 inn::VARCHAR (50), 
+			 kpp::VARCHAR (50), 
+			 ogrn::VARCHAR (50), 
+			 regionId::int2, 
+			 regionName::VARCHAR (150), 
+			 organizationType::int2, 
+			 moDeptName::VARCHAR (150), 
+			 founder::VARCHAR (250), 
+			 to_date(deleteDate, 'DD.MM.YYYY'),
+			 deleteReason::VARCHAR (50), 
+			 to_date(createDate, 'DD.MM.YYYY'),
+			 to_date(modifyDate, 'DD.MM.YYYY'), 
+			 moLevel::VARCHAR (11), 
+			 moAgencyKind::VARCHAR (70), 
+			 profileAgencyKind::VARCHAR (2048)
+                    ), E',\n'
+                ),'
+            )
+            INSERT INTO OMS.cb_medorg (id,uid, oid, name_full, name_short, parent_id, medical_subject_id, medical_subject_name, inn, kpp, ogrn, region_id,
+            	region_name, organization_type, mo_dept_name, founder, delete_date, delete_reason, create_date, modify_date, mo_level, mo_agency_kind, profile_agency_kind)
+                SELECT nextval(''oms.cb_medorg_id_seq''),id,oid, nameFull,  nameShort, parentId, medicalSubjectId, medicalSubjectName, inn, kpp, ogrn, regionId, regionName, organizationType, moDeptName, founder, deleteDate, deleteReason, createDate, modifyDate, moLevel, moAgencyKind, profileAgencyKind
+                FROM t
+            ;'
+        )
+    FROM t
+
+;

@@ -1,0 +1,164 @@
+insert into sec.role(name , code,description) 
+values 
+('ФОМС: администратор','ffoms_user','Администратор ffoms') 
+, ('ФОМС: пользователь','xfoms_user','Пользователь xfoms')  
+-- ('ФОМС: пользователь','yfoms_user','Пользователь yfoms') 
+, ('ТФОМС: оператор СМО(добавление)','tfoms_user_smo_create','Оператор yfoms_smo_create') 
+, ('ТФОМС: оператор СМО(редактирование)','tfoms_user_smo_edit','Оператор yfoms_smo_edit') 
+, ('ТФОМС: оператор МО(добавление)','tfoms_user_mo_create','Оператор yfoms_mo_create') 
+, ('ТФОМС: оператор МО(редактирование)','tfoms_user_mo_edit','Оператор yfoms_mo_edit') 
+, ('ТФОМС: оператор экспертов качества','tfoms_user_exmp','Оператор yfoms_ekmp')
+
+;
+
+-- permission для роли ФОМС: администратор ( ffoms_user ) 
+insert into role_permission (role_id , permission_id) values 
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.unloading.xls')), -- 1 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.unloading.xls')), -- 1 4 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.unloading.xls')), -- 1 5 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.read')),-- 1 2 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.create')), -- 1 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.edit')), -- 1 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.history.read')),-- 1 2 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.history.create')),-- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.history.edit')),-- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.history.delete')),-- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.license.read')), -- 1 2 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.license.create')), -- 1 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.license.edit')),-- 1 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.license.delete')),-- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.inclusion.read')),-- 1 2 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.inclusion.create')), -- 1 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.inclusion.edit')), -- 1 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.inclusion.delete')),
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.signal.read')),-- 1 2 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.signal.create')),-- 1 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.signal.edit')), -- 1 3 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='smo.signal.delete')),-- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.read')), -- 1 2 4 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.create')), -- 1 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.edit')), -- 1 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.history.read')), -- 1 2 4 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.history.create')), -- 1 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.history.edit')), -- 1 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.history.delete')),
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.inclusion.read')), -- 1 2 4 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.inclusion.create')),
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.inclusion.edit')),
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.license.read')), -- 1 2 4 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.license.create')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.license.edit')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.license.delete')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.signal.read')), -- 1 2 4 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.signal.create')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.signal.edit')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='mo.signal.delete')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.read')), -- 1 2 5 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.create')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.edit')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.delete')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.history.read')), -- 1 2 5 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.history.create')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.history.edit')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.history.delete')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.inclusion.read')), -- 1 2 5 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.inclusion.create')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.inclusion.edit')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.inclusion.delete')),
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.document.read')), -- 1 2 5 ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.document.create')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.document.edit')), -- ,
+ ((select id from role where code='ffoms_user'),(select id from permission where code='ekmp.document.delete')) -- ; 
+ -- permission для роли ФОМС: пользователь ( xfoms_user ) 
+ ;
+ insert into role_permission (role_id , permission_id) values 
+ ((select id from role where code='xfoms_user'),(select id from permission where code='smo.read')),-- 1 2 3 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='smo.history.read')),-- 1 2 3 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='smo.license.read')), -- 1 2 3 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='smo.inclusion.read')),-- 1 2 3 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='smo.signal.read')),-- 1 2 3 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='mo.read')), -- 1 2 4 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='mo.history.read')), -- 1 2 4 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='mo.inclusion.read')), -- 1 2 4 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='mo.license.read')), -- 1 2 4 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='mo.signal.read')), -- 1 2 4 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='ekmp.read')), -- 1 2 5 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='ekmp.history.read')), -- 1 2 5 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='ekmp.inclusion.read')), -- 1 2 5 ,
+ ((select id from role where code='xfoms_user'),(select id from permission where code='ekmp.document.read')) -- 1 2 5 ; 
+ ;
+ -- permission для роли ТФОМС: оператор СМО(добавление) ( tfoms_user_smo_create ) 
+ insert into role_permission (role_id , permission_id) values 
+ ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.unloading.xls')), -- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.read')),-- 1 2 3 ,
+ ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.create')), -- 1 3 ,
+ -- ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.edit')), -- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.history.read')),-- 1 2 3 ,
+ ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.license.read')), -- 1 2 3 ,
+ ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.license.create')), -- 1 3 ,
+ -- ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.license.edit')),-- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.inclusion.read')),-- 1 2 3 ,
+ ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.inclusion.create')), -- 1 3 ,
+ -- ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.inclusion.edit')), -- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.signal.read')),-- 1 2 3 ,
+ ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.signal.create'))-- 1 3 ,
+ -- ((select id from role where code='tfoms_user_smo_create'),(select id from permission where code='smo.signal.edit')), -- 1 3 ;
+  ;
+ -- permission для роли ТФОМС: оператор СМО(редактирование) ( tfoms_user_smo_edit ) 
+ insert into role_permission (role_id , permission_id) values 
+ ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.unloading.xls')), -- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.read')),-- 1 2 3 ,
+ -- ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.create')), -- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.edit')), -- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.history.read')),-- 1 2 3 ,
+ ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.license.read')), -- 1 2 3 ,
+ -- ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.license.create')), -- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.license.edit')),-- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.inclusion.read')),-- 1 2 3 ,
+ -- ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.inclusion.create')), -- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.inclusion.edit')), -- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.signal.read')),-- 1 2 3 ,
+ -- ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.signal.create')),-- 1 3 ,
+ ((select id from role where code='tfoms_user_smo_edit'),(select id from permission where code='smo.signal.edit')) -- 1 3 ;
+ ;
+  -- permission для роли ТФОМС: оператор МО(добавление) ( tfoms_user_mo_create) 
+	insert into role_permission (role_id , permission_id) values 
+ ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.unloading.xls')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.read')), -- 1 2 4 ,
+ ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.create')), -- 1 4 ,
+ -- ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.edit')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.history.read')), -- 1 2 4 ,
+ ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.inclusion.read')), -- 1 2 4 ,
+ ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.inclusion.create')), -- 1 4 ,
+ -- ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.inclusion.edit')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.license.read')), -- 1 2 4 ,
+ ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.license.create')), -- 1 4 ,
+ -- ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.license.edit')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.signal.read')), -- 1 2 4 ,
+ ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.signal.create')) -- 1 4 ,
+ -- ((select id from role where code='tfoms_user_mo_create'),(select id from permission where code='mo.signal.edit')), -- 1 4 ;
+ ;
+  -- permission для роли ТФОМС: оператор МО(редактирование) ( tfoms_user_mo_edit ) 
+	insert into role_permission (role_id , permission_id) values 
+ ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.unloading.xls')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.read')), -- 1 2 4 ,
+ -- ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.create')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.edit')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.history.read')), -- 1 2 4 ,
+ ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.inclusion.read')), -- 1 2 4 ,
+ -- ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.inclusion.create')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.inclusion.edit')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.license.read')), -- 1 2 4 ,
+ -- ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.license.create')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.license.edit')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.signal.read')), -- 1 2 4 ,
+  -- ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.signal.create')), -- 1 4 ,
+ ((select id from role where code='tfoms_user_mo_edit'),(select id from permission where code='mo.signal.edit')) -- 1 4 ;
+ ;
+ -- permission для роли ТФОМС: оператор экспертов качества ( tfoms_user_exmp ) 
+ insert into role_permission (role_id , permission_id) values 
+ ((select id from role where code='tfoms_user_exmp'),(select id from permission where code='ekmp.unloading.xls')), -- 1 5 ,
+ ((select id from role where code='tfoms_user_exmp'),(select id from permission where code='ekmp.read')), -- 1 2 5 ,
+ ((select id from role where code='tfoms_user_exmp'),(select id from permission where code='ekmp.history.read')), -- 1 2 5 ,
+ ((select id from role where code='tfoms_user_exmp'),(select id from permission where code='ekmp.inclusion.read')), -- 1 2 5 ,
+ ((select id from role where code='tfoms_user_exmp'),(select id from permission where code='ekmp.document.read')) -- 1 2 5 
